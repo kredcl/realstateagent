@@ -458,12 +458,19 @@ html.cine .ar-leaf1 { --s: 5vw; left: 59vw; top: 80svh; z-index: 7; }
 
 /* Zonas */
 html.cine .zn-video { inset: 0; z-index: 1; width: auto; border-radius: 0; aspect-ratio: auto; }
-html.cine .zn-word {
-  right: var(--m); top: calc(var(--hh) + 3svh); z-index: 4; font-size: 8.6vw;
-  writing-mode: vertical-rl; transform-origin: 50% 0; color: var(--cream); transition: color 0.5s var(--ease);
+html.cine .zn-video::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to left, rgba(4, 26, 23, 0.62), rgba(4, 26, 23, 0.18) 34%, rgba(4, 26, 23, 0.08));
 }
-html.cine .zn-word { rotate: 180deg; top: auto; bottom: 4svh; }
-html.cine .zn-word.is-ink { color: var(--deep); }
+/* Palabra vertical: se mide por la altura de la pantalla para que siempre quepa entera */
+html.cine .zn-word {
+  right: var(--m); bottom: 5svh; z-index: 4;
+  font-size: min(8.6vw, 19svh); line-height: 0.82;
+  writing-mode: vertical-rl; rotate: 180deg; transform-origin: 50% 50%;
+  color: var(--cream); text-shadow: 0 0 34px rgba(4, 26, 23, 0.28);
+  transition: color 0.5s var(--ease), text-shadow 0.5s var(--ease);
+}
+html.cine .zn-word.is-ink { color: var(--deep); text-shadow: none; }
 html.cine .zn-copy {
   left: var(--m); top: calc(var(--hh) + 3svh); bottom: 7svh; width: 29vw; z-index: 2;
   display: flex; flex-direction: column; gap: 18px;

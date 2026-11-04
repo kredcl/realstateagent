@@ -215,9 +215,9 @@ const run = {
     }
     q.pts.forEach((g, i) => st(g, 'opacity', out3(seg(p, 0.74 + i * 0.018, 0.8 + i * 0.018)).toFixed(3)));
     reveal(q.mapHead, p, 0.7, 0.1, 0.03);
-    q.leaf1._ey = (1 - out3(seg(p, 0, 0.5))) * -vh * 0.8;
-    q.leaf2._ey = (1 - out3(seg(p, 0.2, 0.75))) * -vh * 1.1;
-    q.seed._ey = (1 - out3(seg(p, 0.45, 0.85))) * -vh * 1.2;
+    q.leaf1._ex = (1 - out3(seg(p, 0.05, 0.5))) * -vw * 0.35;
+    q.leaf2._ex = (1 - out3(seg(p, 0.2, 0.7))) * vw * 0.4;
+    q.seed._ex = (1 - out3(seg(p, 0.45, 0.85))) * -vw * 0.3;
   },
 
   props(c, p, pre) {
