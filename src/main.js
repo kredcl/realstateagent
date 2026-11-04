@@ -41,6 +41,7 @@ function resetInline() {
   });
   touched.clear();
   $$('.is-ink').forEach((el) => el.classList.remove('is-ink'));
+  clearBigWords();
   chapters.forEach((c) => (c.last = -1));
 }
 
@@ -76,14 +77,22 @@ function reveal(els, p, a, span = 0.12, step = 0.035) {
 }
 const px = (v) => `${v.toFixed(1)}px`;
 
+/* La palabra se compone grande (nítida) y se achica con scale() < 1 */
 const scaleCache = new WeakMap();
-function fitScale(word) {
+function bigWord(word) {
   if (scaleCache.has(word)) return scaleCache.get(word);
+  word.style.fontSize = '';
+  const base = parseFloat(getComputedStyle(word).fontSize) || 16;
   const w = word.offsetWidth || 1;
   const m = parseFloat(getComputedStyle(root).getPropertyValue('--m')) || 40;
-  const s = Math.max(1, (vw - 2 * m) / w);
-  scaleCache.set(word, s);
-  return s;
+  const s0 = Math.max(1, (vw - 2 * m) / w);
+  word.style.fontSize = `${(base * s0).toFixed(2)}px`;
+  const info = { s0, H: word.offsetHeight };
+  scaleCache.set(word, info);
+  return info;
+}
+function clearBigWords() {
+  $$('[data-split]').forEach((w) => { scaleCache.delete(w); w.style.fontSize = ''; });
 }
 
 const run = {
@@ -99,8 +108,9 @@ const run = {
     const hh = 100;
     letters(q.word, seg(pre, 0.3, 1) * 0.85 + seg(p, 0, 0.05) * 0.15);
     const t1 = inOut(seg(p, 0.07, 0.36));
-    const s0 = fitScale(q.word);
-    st(q.word, 'transform', `scale(${mix(s0, 1, t1).toFixed(4)})`);
+    const { s0, H } = bigWord(q.word);
+    const ty = mix(H / s0 / 2 - H / 2, 0, t1);
+    st(q.word, 'transform', `translateY(${px(ty)}) scale(${mix(1, 1 / s0, t1).toFixed(5)})`);
     st(q.photo, 'clipPath', `inset(${px(t1 * (hh + vh * 0.03))} ${px(t1 * vw * 0.33)} 0px ${px(t1 * vw * 0.31)})`);
     st(q.img, 'transform', `scale(${mix(1.14, 1, out3(seg(pre, 0, 1) * 0.4 + seg(p, 0, 0.4) * 0.6)).toFixed(4)})`);
     const t2 = out3(seg(p, 0.3, 0.48));
@@ -130,8 +140,8 @@ const run = {
     st(q.img, 'transform', `scale(${mix(1.16, 1, seg(pre, 0, 1) * 0.5 + seg(p, 0, 0.2) * 0.5).toFixed(4)})`);
     const t1 = inOut(seg(p, 0.1, 0.32));
     st(q.field, 'clipPath', `inset(${((1 - t1) * 100).toFixed(2)}% 0% 0% 0%)`);
-    const s0 = fitScale(q.word);
-    st(q.word, 'transform', `scale(${mix(s0, 1, inOut(seg(p, 0.12, 0.36))).toFixed(4)})`);
+    const { s0 } = bigWord(q.word);
+    st(q.word, 'transform', `scale(${mix(1, 1 / s0, inOut(seg(p, 0.12, 0.36))).toFixed(5)})`);
     q.word.classList.toggle('is-ink', t1 > 0.45);
     c.tone = t1 > 0.9 ? 'light' : 'dark';
     reveal([...q.copy, q.plus], p, 0.3);
@@ -262,10 +272,15 @@ function updateHero() {
   if (!heroReady || RM) return;
   const y = scrollY;
   if (y > vh * 1.3) return;
-  st(heroPhoto, 'transform', `translateY(${px(y * 0.28)}) scale(1.02)`);
   st(heroMark, 'transform', `translateY(${px(y * 0.18)})`);
-  st(heroOval, 'transform', `translateY(${px(y * -0.12)})`);
 }
+
+/* ---------- Héroe: dos imágenes con máscara ovalada que se abren con el mouse ---------- */
+const heroHalves = matchMedia('(min-width: 900px) and (hover: hover)');
+hero.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || !heroHalves.matches) return;
+  hero.classList.toggle('r-open', e.clientX > innerWidth / 2);
+});
 
 /* ---------- Cabecera: tono según la sección ---------- */
 const hdr = $('[data-hdr]');
@@ -345,7 +360,7 @@ function onResize() {
   vw = innerWidth;
   vh = innerHeight;
   setMode();
-  $$('[data-split]').forEach((w) => scaleCache.delete(w));
+  clearBigWords();
   chapters.forEach((c) => (c.last = -1));
   measureMarquee();
 }
@@ -354,7 +369,7 @@ measureMarquee();
 addEventListener('resize', onResize);
 mq.addEventListener('change', onResize);
 requestAnimationFrame(frame);
-document.fonts && document.fonts.ready.then(() => { $$('[data-split]').forEach((w) => scaleCache.delete(w)); chapters.forEach((c) => (c.last = -1)); measureMarquee(); });
+document.fonts && document.fonts.ready.then(() => { clearBigWords(); chapters.forEach((c) => (c.last = -1)); measureMarquee(); });
 
 /* ---------- Revelado al entrar (teléfono y secciones normales) ---------- */
 if (!RM) {
@@ -402,15 +417,14 @@ function intro() {
   claim.forEach((s) => (s.style.transform = 'translateY(110%)'));
   claim.forEach((s) => (s.parentElement.style.overflow = 'hidden'));
   introEls.forEach((s) => { s.style.opacity = '0'; s.style.transform = 'translateY(24px)'; });
-  heroOval.style.transform = 'scale(0.4)';
-  heroOval.style.opacity = '0';
+  hero.classList.add('is-intro');
   if (down) down.style.opacity = '0';
 
   const D = 1700;
   animate(drawables, { draw: ['0 0', '0 1'], duration: 950, delay: stagger(115), ease: 'inOutQuad' });
   animate(loader, { clipPath: ['inset(0% 0% 0% 0%)', 'inset(0% 0% 100% 0%)'], duration: 1100, delay: D, ease: 'inOutQuart' });
   animate(heroPhoto, { scale: [1.18, 1], duration: 2000, delay: D, ease: 'outQuart' });
-  animate(heroOval, { scale: [0.4, 1], opacity: [0, 1], duration: 1400, delay: D + 350, ease: 'outQuart' });
+  setTimeout(() => hero.classList.remove('is-intro'), D + 300);
   animate(claim, { translateY: ['110%', '0%'], duration: 1100, delay: stagger(120, { start: D + 500 }), ease: 'outQuart' });
   animate(introEls, { opacity: [0, 1], translateY: [24, 0], duration: 900, delay: stagger(110, { start: D + 700 }), ease: 'outQuart' });
   if (down) animate(down, { opacity: [0, 1], duration: 700, delay: D + 1000 });
@@ -420,7 +434,7 @@ function intro() {
   }, D + 1150);
   setTimeout(() => {
     heroReady = true;
-    [heroPhoto, heroOval].forEach((el) => { el.style.transform = ''; el.style.opacity = ''; });
+    heroPhoto.style.transform = '';
     claim.forEach((s) => { s.style.transform = ''; });
     introEls.forEach((s) => { s.style.transform = ''; s.style.opacity = ''; });
   }, D + 2200);

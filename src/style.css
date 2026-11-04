@@ -176,7 +176,32 @@ html.loading body { overflow: hidden; }
     content: ''; position: absolute; inset: 40% 0 0;
     background: linear-gradient(to top, rgba(4, 26, 23, 0.72), rgba(4, 26, 23, 0));
   }
-  .hero-oval { position: absolute; left: 60%; top: 21svh; width: 29vw; height: 68svh; margin: 0; aspect-ratio: auto; }
+  .hero {
+    --open: ellipse(80% 80% at 50% 55%);
+    --shut: ellipse(min(14.6vw, 240px) min(33svh, 330px) at 50% 55%);
+    --zero: ellipse(0px 0px at 50% 55%);
+    transition: background-color 1s var(--ease);
+  }
+  .hero-photo, .hero-oval {
+    transition: clip-path 1.15s cubic-bezier(0.7, 0, 0.2, 1);
+    will-change: clip-path;
+  }
+  .hero-photo { clip-path: var(--open); }
+  .hero-photo img, .hero-oval video { transition: transform 1.4s var(--ease); }
+  .hero-oval {
+    position: absolute; inset: 0 0 0 50%; width: auto; height: auto; margin: 0; aspect-ratio: auto;
+    border-radius: 0; clip-path: var(--shut);
+  }
+  .hero-oval::after {
+    content: ''; position: absolute; inset: 50% 0 0;
+    background: linear-gradient(to top, rgba(4, 26, 23, 0.6), rgba(4, 26, 23, 0));
+  }
+  .hero.is-intro .hero-oval { clip-path: var(--zero); }
+  .hero.r-open { background: var(--green); }
+  .hero.r-open .hero-photo { clip-path: var(--shut); }
+  .hero.r-open .hero-photo img { transform: scale(1.08); }
+  .hero.r-open .hero-oval { clip-path: var(--open); }
+  .hero:not(.r-open) .hero-oval video { transform: scale(1.12); }
   .hero-mark { position: absolute; left: var(--m); right: var(--m); top: calc(var(--hh) + 2svh); }
   .hero-mark svg { max-height: calc(100svh - var(--hh) - 300px); margin: 0 auto; }
   .hero-claim {
@@ -201,7 +226,7 @@ html.loading body { overflow: hidden; }
   letter-spacing: -0.03em; text-transform: uppercase; white-space: nowrap;
 }
 .bigword .l { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.04em; margin-bottom: -0.04em; }
-.bigword .l > span { display: inline-block; will-change: transform; }
+.bigword .l > span { display: inline-block; }
 .lead {
   font-size: clamp(1.45rem, 1rem + 1.2vw, 2.1rem); font-weight: 350; line-height: 1.08;
   letter-spacing: -0.005em; text-transform: uppercase; text-wrap: balance; max-width: 16ch;
@@ -371,7 +396,7 @@ html.cine [data-reveal] { opacity: 1; transform: none; }
 
 /* Comprar */
 html.cine .cm-photo { inset: 0; z-index: 1; margin: 0; aspect-ratio: auto; will-change: clip-path; }
-html.cine .cm-word { left: var(--m); top: 54svh; }
+html.cine .cm-word { left: var(--m); top: 54svh; transform-origin: 0 0; }
 html.cine .cm-circle { left: var(--m); top: calc(var(--hh) + 3svh); width: 17vw; height: 36svh; aspect-ratio: auto; z-index: 2; }
 html.cine .cm-copy {
   left: 70vw; right: var(--m); top: calc(var(--hh) + 3svh); bottom: 7svh; z-index: 2;
